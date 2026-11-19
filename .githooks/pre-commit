@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+command -v clang-format >/dev/null 2>&1 || {
+  echo "pre-commit: clang-format not found, refusing to commit" >&2
+  exit 1
+}
+
+IFS='
+'
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.c' '*.h')
+if [ -z "$files" ]; then
+  exit 0
+fi
+
+for f in $files; do
+  if [ -n "$(tail -c1 "$f")" ]; then
+    printf '\n' >>"$f"
+  fi
+  clang-format -i -- "$f"
+  git add -- "$f"
+done
